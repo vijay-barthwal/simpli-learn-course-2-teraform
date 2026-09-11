@@ -1,39 +1,32 @@
 pipeline {
     agent any
 
-    environment {
-        // Update this to wherever Tomcat is reachable from the Jenkins agent
-        TOMCAT_URL   = 'http://localhost:8080'
-        CONTEXT_PATH = '/petclinic'
+    tools {
+        // Task 3 & 5 requirement: Links Jenkins to the Maven tool installed on the system
+        maven 'Maven3' 
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
+                // Task 6 & 7 requirement: Checks out the code pushed to your GitHub repository
                 checkout scm
             }
         }
 
-        stage('Build') {
+        stage('Build Artifact') {
             steps {
-                sh './mvnw clean package -DskipTests'
+                // Task 3 requirement: Packages the PetClinic project using the Maven wrapper or Maven CLI
+                // Switch between './mvnw' or 'mvn' based on your repository setup
+                sh 'mvn clean package -DskipTests'
             }
         }
 
-        stage('Deploy to Tomcat') {
+        stage('Deploy to Local Tomcat') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'tomcat-manager',
-                    usernameVariable: 'TOMCAT_USER',
-                    passwordVariable: 'TOMCAT_PASS'
-                )]) {
-                    sh '''
-                        WAR_FILE=$(ls target/*.war)
-                        curl -f -u "$TOMCAT_USER:$TOMCAT_PASS" \
-                             -T "$WAR_FILE" \
-                             "$TOMCAT_URL/manager/text/deploy?path=$CONTEXT_PATH&update=true"
-                    '''
-                }
+                // Task 8 requirement: Deploys the application directly to the local Tomcat webapps directory
+                // Changes ownership/permissions might be needed depending on your EC2 setups
+                sh 'sudo cp target/*.war /var/lib/tomcat9/webapps/petclinic.war'
             }
         }
     }
